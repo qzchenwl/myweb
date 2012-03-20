@@ -3,22 +3,22 @@ Default: &defaults
   password: yesod-cwl
   host: localhost
   port: 5432
-  database: yesod-cwl
+  database: yesod_cwl
   poolsize: 10
 
 Development:
   <<: *defaults
 
 Test:
-  database: yesod-cwl_test
+  database: yesod_cwl_test
   <<: *defaults
 
 Staging:
-  database: yesod-cwl_staging
+  database: yesod_cwl_staging
   poolsize: 100
   <<: *defaults
 
 Production:
-  database: yesod-cwl_production
+  database: yesod_cwl_production
   poolsize: 100
   <<: *defaults

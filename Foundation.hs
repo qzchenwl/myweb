@@ -35,6 +35,7 @@ import Model
 import Text.Jasmine (minifym)
 import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
+import Data.Text (Text)
 #if DEVELOPMENT
 import qualified Data.Text.Lazy.Encoding
 #else
