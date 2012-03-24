@@ -26,7 +26,9 @@ import Network.HTTP.Conduit (newManager, def)
 import qualified Data.Text as T
 import qualified Data.Yaml as Y
 import qualified Data.HashMap.Strict as M
+#ifndef DEVELOPMENT
 import Web.Heroku
+#endif
 
 -- Import all relevant handler modules here.
 import Handler.Root
@@ -42,14 +44,16 @@ withYamlHerokuEnvironment :: Show e
                           -> IO a
 withYamlHerokuEnvironment fp env f = do
     mval <- Y.decodeFile fp
+#ifdef DEVELOPMENT
+    let extra = []
+#else
     extra <- dbConnParams
-    print mval
+#endif
     case mval of
         Nothing -> fail $ "Invalid YAML file: " ++ show fp
         Just (Object obj)
-            | Just v <- M.lookup (T.pack $ show env) obj
-                -> case v of
-                    (Object obj') -> let v' = Object (insertAll extra obj') in (print v' >> Y.parseMonad f v')
+            | Just (Object obj') <- M.lookup (T.pack $ show env) obj
+                    -> let v' = Object (insertAll extra obj') in Y.parseMonad f v'
         _ -> fail $ "Could not find environment: " ++ show env
   where
     insertAll xs m = foldr insertPair m xs
@@ -115,3 +119,4 @@ getApplicationDev =
     loader = loadConfig (configSettings Development)
         { csParseExtra = parseExtra
         }
+
