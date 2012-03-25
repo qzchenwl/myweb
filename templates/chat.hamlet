@@ -1,0 +1,8 @@
+<h1>Chat Example
+<form>
+    <textarea cols="80" rows="20" name="chat">
+    <p>
+        <input type="text" size="15" name="name" id="name">
+        <input type="text" size="60" name="send" id="send">
+        <input type="submit" value="Send">
+<script> var clientNumber = #{show client}

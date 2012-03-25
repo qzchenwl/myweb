@@ -1,0 +1,5 @@
+.ghci
+client_session_key.aes
+config/client_session_key.aes
+dist/*
+static/tmp/*
