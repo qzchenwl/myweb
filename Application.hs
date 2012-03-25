@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application
     ( getApplication
-    , withYesodHeroku
+    , getHerokuApp
     , getApplicationDev
     ) where
 
@@ -60,8 +60,9 @@ withYamlHerokuEnvironment fp env f = do
     insertPair ("dbname", v) = M.insert "database" (String v)
     insertPair (k, v) = M.insert k (String v)
 
-withYesodHeroku :: AppConfig DefaultEnv Extra -> Logger -> IO Application
-withYesodHeroku conf logger = do
+-- replace getApplication with getHerokuApp to deploy on Heroku
+getHerokuApp :: AppConfig DefaultEnv Extra -> Logger -> IO Application
+getHerokuApp conf logger = do
    manager <- newManager def
    s <- staticSite
    dbconf <- withYamlHerokuEnvironment "config/postgresql.yml" (appEnv conf)
@@ -114,7 +115,7 @@ getApplication conf logger = do
 -- for yesod devel
 getApplicationDev :: IO (Int, Application)
 getApplicationDev =
-    defaultDevelApp loader withYesodHeroku
+    defaultDevelApp loader getApplication
   where
     loader = loadConfig (configSettings Development)
         { csParseExtra = parseExtra
