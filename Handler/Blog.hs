@@ -6,10 +6,7 @@ module Handler.Blog
 where
 
 import Import
-
--- to use Html into forms
-import Yesod.Form.Nic (YesodNic, nicHtmlField)
-instance YesodNic Cwl
+import Yesod.Form.Nic (nicHtmlField)
 
 entryForm :: Form Article
 entryForm = renderDivs $ Article
@@ -25,6 +22,7 @@ getBlogR = do
     -- to construct the form (see templates/articles.hamlet).
     ((_,articleWidget), enctype) <- generateFormPost entryForm
     defaultLayout $ do
+        setTitle "Blog"
         $(widgetFile "articles")
 
 -- we continue Handler/Blog.hs

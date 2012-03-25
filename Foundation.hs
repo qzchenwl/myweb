@@ -41,6 +41,7 @@ import qualified Data.Text.Lazy.Encoding
 #else
 import Network.Mail.Mime (sendmail)
 #endif
+import Yesod.Form.Nic (YesodNic)
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -167,3 +168,7 @@ deliver _ = sendmail
 -- achieve customized and internationalized form validation messages.
 instance RenderMessage Cwl FormMessage where
     renderMessage _ _ = defaultFormMessage
+
+-- to use Html into forms
+instance YesodNic Cwl
+
