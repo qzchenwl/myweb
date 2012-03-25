@@ -9,3 +9,8 @@
 /mirror MirrorR GET POST
 /blog               BlogR       GET POST
 /blog/#ArticleId    ArticleR    GET
+
+/chat               ChatHomeR   GET
+/chat/check         ChatCheckR  GET
+/chat/post          ChatPostR   GET
+

@@ -1,5 +1,6 @@
 module Foundation
     ( Cwl (..)
+    , ChatMsg (..)
     , Route (..)
     , CwlMessage (..)
     , resourcesCwl
@@ -42,6 +43,7 @@ import qualified Data.Text.Lazy.Encoding
 import Network.Mail.Mime (sendmail)
 #endif
 import Yesod.Form.Nic (YesodNic)
+import Control.Concurrent.STM
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -54,7 +56,11 @@ data Cwl = Cwl
     , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     , httpManager :: Manager
     , persistConfig :: Settings.PersistConfig
+    , chatClients   :: TVar [(Int, TChan ChatMsg)]
+    , nextClient    :: TVar Int
     }
+-- | speaker and content
+data ChatMsg = ChatMsg Text Text
 
 -- Set up i18n messages. See the message folder.
 mkMessage "Cwl" "messages" "en"

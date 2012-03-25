@@ -1,9 +1,12 @@
 {-# LANGUAGE QuasiQuotes, TemplateHaskell #-}
-import Yesod.Core (mkYesodData)
+
+import Import
+import Yesod.Core (mkYesodData, mkYesodDispatch)
 import Yesod.Routes.Parse (parseRoutesFile)
 import Language.Haskell.TH (pprint, runQ)
 
-th = mkYesodData "Cwl" $(parseRoutesFile "../config/routes")
+mkYesodData "Cwl" $(parseRoutesFile "config/routes")
+th = mkYesodDispatch "Cwl" resourcesCwl
 main = runQ th >>= putStrLn.pprint
 
 {-

@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application
     ( getApplication
-    , getHerokuApp
     , getApplicationDev
     ) where
 
@@ -22,65 +21,14 @@ import Network.Wai.Middleware.RequestLogger (logCallback)
 import qualified Database.Persist.Store
 import Database.Persist.GenericSql (runMigration)
 import Network.HTTP.Conduit (newManager, def)
-
-import qualified Data.Text as T
-import qualified Data.Yaml as Y
-import qualified Data.HashMap.Strict as M
-#ifndef DEVELOPMENT
-import Web.Heroku
-#endif
+import Control.Concurrent.STM
 
 -- Import all relevant handler modules here.
 import Handler.Root
 import Handler.Echo
 import Handler.Mirror
 import Handler.Blog
-
--- heroku hack
-withYamlHerokuEnvironment :: Show e
-                          => FilePath -- ^ the yaml file
-                          -> e        -- ^ the environment you want to load
-                          -> (Value -> Y.Parser a) -- ^ what to do with the mapping
-                          -> IO a
-withYamlHerokuEnvironment fp env f = do
-    mval <- Y.decodeFile fp
-#ifdef DEVELOPMENT
-    let extra = []
-#else
-    extra <- dbConnParams
-#endif
-    case mval of
-        Nothing -> fail $ "Invalid YAML file: " ++ show fp
-        Just (Object obj)
-            | Just (Object obj') <- M.lookup (T.pack $ show env) obj
-                    -> let v' = Object (insertAll extra obj') in Y.parseMonad f v'
-        _ -> fail $ "Could not find environment: " ++ show env
-  where
-    insertAll xs m = foldr insertPair m xs
-    insertPair ("dbname", v) = M.insert "database" (String v)
-    insertPair (k, v) = M.insert k (String v)
-
--- replace getApplication with getHerokuApp to deploy on Heroku
-getHerokuApp :: AppConfig DefaultEnv Extra -> Logger -> IO Application
-getHerokuApp conf logger = do
-   manager <- newManager def
-   s <- staticSite
-   dbconf <- withYamlHerokuEnvironment "config/postgresql.yml" (appEnv conf)
-             Database.Persist.Store.loadConfig
-   p <- Database.Persist.Store.createPoolConfig (dbconf :: Settings.PersistConfig)
-   Database.Persist.Store.runPool dbconf (runMigration migrateAll) p
-   let foundation = Cwl conf setLogger s p manager dbconf
-   app <- toWaiAppPlain foundation
-   return $ logWare app
- where
-#ifdef DEVELOPMENT
-   logWare = logCallbackDev (logBS setLogger)
-   setLogger = logger
-#else
-   setLogger = toProduction logger -- by default the logger is set for development
-   logWare = logCallback (logBS setLogger)
-#endif
-
+import Handler.Chat
 
 -- This line actually creates our YesodSite instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see
@@ -93,6 +41,8 @@ mkYesodDispatch "Cwl" resourcesCwl
 -- migrations handled by Yesod.
 getApplication :: AppConfig DefaultEnv Extra -> Logger -> IO Application
 getApplication conf logger = do
+    cs <- newTVarIO []
+    nc <- newTVarIO 0
     manager <- newManager def
     s <- staticSite
     dbconf <- withYamlEnvironment "config/postgresql.yml" (appEnv conf)
@@ -100,7 +50,7 @@ getApplication conf logger = do
               Database.Persist.Store.applyEnv
     p <- Database.Persist.Store.createPoolConfig (dbconf :: Settings.PersistConfig)
     Database.Persist.Store.runPool dbconf (runMigration migrateAll) p
-    let foundation = Cwl conf setLogger s p manager dbconf
+    let foundation = Cwl conf setLogger s p manager dbconf cs nc
     app <- toWaiAppPlain foundation
     return $ logWare app
   where
